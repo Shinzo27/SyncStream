@@ -5,7 +5,15 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+}
 
+[data-theme='dark'] {
+  --bg-color: #333333;
+  --text-color: #ffffff;
+}
 @layer base {
   :root {
     --background: 0 0% 100%;
