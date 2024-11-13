@@ -18,7 +18,7 @@ const Appbar = () => {
   if (!mounted) return null;
 
   return (
-    <header className="container mx-auto px-4 py-6 flex justify-between items-center">
+    <header className="px-6 py-6 flex justify-between items-center bg-white dark:bg-neutral-950 text-black dark:text-white w-screen">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SyncStream</h1>
           <nav className="flex items-center space-x-4">
             <Button variant="ghost">Login</Button>
