@@ -15,18 +15,35 @@ import {
 import { Github } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const page = () => {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
-      toast.success("Login Successful");
-      setIsLoading(false);
-    }, 3000);
+    try {
+      const signin = await signIn("credentials", {
+        email,
+        password,
+        redirect: false
+      })
+      if(signin?.ok) {
+        toast.success("Login Successful");
+        setIsLoading(false);
+        router.push("/");
+      } else {
+        toast.error("Login Failed");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
@@ -51,6 +68,8 @@ const page = () => {
                   autoComplete="email"
                   autoCorrect="off"
                   disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -63,6 +82,8 @@ const page = () => {
                   autoComplete="current-password"
                   autoCorrect="off"
                   disabled={isLoading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <Button disabled={isLoading} className="bg-slate-800 hover:bg-slate-900 text-white">
