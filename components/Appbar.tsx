@@ -75,7 +75,7 @@ const Appbar = () => {
                 variant="ghost"
                 className="bg-neutral-700 text-white dark:bg-white dark:text-black"
               >
-                User
+                {session.user.name}
               </Button>
               <Button
                 className="border border-neutral-600 dark:bg-slate-900 hover:bg-neutral-700 hover:text-white dark:hover:bg-neutral-500"

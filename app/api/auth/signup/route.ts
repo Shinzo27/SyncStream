@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-export default async function POST(req: NextRequest) {
+export async function POST(req: NextRequest) {
     if(req.method !== "POST") {
         return  NextResponse.json({ message: "Method not allowed" }, { status: 405 });
     }
@@ -22,7 +22,7 @@ export default async function POST(req: NextRequest) {
         }
     });
     if(existingUser) {
-        return NextResponse.json({ message: "User already exists" }, { status: 400 });
+        return NextResponse.json({ message: "User already exists", status: 400 });
     }
 
     const existingUsername = await prisma.user.findFirst({
@@ -31,7 +31,7 @@ export default async function POST(req: NextRequest) {
         }
     });
     if(existingUsername) {
-        return NextResponse.json({ message: "Username already exists" }, { status: 400 });
+        return NextResponse.json({ message: "Username already exists", status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -45,8 +45,8 @@ export default async function POST(req: NextRequest) {
     });
 
     if(newUser) {
-        return NextResponse.json({ message: "User created successfully" }, { status: 200 });
+        return NextResponse.json({ message: "User created successfully", status: 200 });
     } else {
-        return NextResponse.json({ message: "Error creating user" }, { status: 500 });
+        return NextResponse.json({ message: "Error creating user", status: 500 });
     }
 }

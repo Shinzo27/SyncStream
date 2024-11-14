@@ -23,6 +23,7 @@ const page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
@@ -45,6 +46,8 @@ const page = () => {
       console.log(error);
     }
   }
+
+  
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-neutral-950 dark:text-white flex items-center justify-center p-4">
