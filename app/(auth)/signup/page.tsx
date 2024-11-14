@@ -31,6 +31,16 @@ const page = () => {
           <form onSubmit={onSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Example123"
+                  type="text"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -40,6 +50,7 @@ const page = () => {
                   autoComplete="email"
                   autoCorrect="off"
                   disabled={isLoading}
+                  required
                 />
               </div>
               <div className="grid gap-2">
@@ -52,18 +63,7 @@ const page = () => {
                   autoComplete="new-password"
                   autoCorrect="off"
                   disabled={isLoading}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  placeholder="Confirm your password"
-                  type="password"
-                  autoCapitalize="none"
-                  autoComplete="new-password"
-                  autoCorrect="off"
-                  disabled={isLoading}
+                  required
                 />
               </div>
               <Button disabled={isLoading} className='bg-slate-800 hover:bg-slate-900 text-white'>

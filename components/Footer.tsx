@@ -1,6 +1,6 @@
 const Footer = () => {
     return (
-        <footer className="bg-gray-100 py-8 dark:bg-neutral-950">
+        <footer className="bg-white py-8 dark:bg-neutral-950">
           <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-300">
             <p className="mb-2">© 2023 SyncStream. All rights reserved.</p>
             <nav className="flex justify-center space-x-4">

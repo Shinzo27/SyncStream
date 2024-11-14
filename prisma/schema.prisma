@@ -12,3 +12,46 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id              String     @id @default(uuid())
+  username        String     @unique
+  email           String     @unique
+  createdAt       DateTime   @default(now())
+  rooms           Room[]     @relation("RoomHost")
+  roomParticipations RoomParticipant[]
+}
+
+model Room {
+  id              String     @id @default(uuid())
+  name            String
+  createdAt       DateTime   @default(now())
+  hostId          String
+  host            User       @relation("RoomHost", fields: [hostId], references: [id])
+  participants    RoomParticipant[]
+  songs           Song[]
+}
+
+model RoomParticipant {
+  id              String     @id @default(uuid())
+  roomId          String
+  userId          String
+  joinedAt        DateTime   @default(now())
+  isHost          Boolean    @default(false)
+
+  room            Room       @relation(fields: [roomId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId]) // Ensures a user can only join a room once
+}
+
+model Song {
+  id              String     @id @default(uuid())
+  roomId          String
+  title           String
+  artist          String
+  url             String
+  createdAt       DateTime   @default(now())
+
+  room            Room       @relation(fields: [roomId], references: [id])
+}

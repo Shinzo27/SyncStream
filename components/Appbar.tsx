@@ -47,9 +47,18 @@ const Appbar = () => {
             )
             }
             <div className="flex items-center space-x-2">
-              <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-              <Switch checked={theme === "dark" ? true : false} onCheckedChange={()=>setTheme(theme === "dark" ? "light" : "dark")}/>
-              <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              {
+                theme === "dark" ? (
+                  <div className="p-2 border-2 border-gray-600 rounded-md cursor-pointer hover:bg-gray-600" onClick={()=>setTheme("light")} >
+                    <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400"/>
+                  </div>
+                ) : (
+                  <div className="p-2 border border-black rounded-md cursor-pointer hover:bg-gray-200" onClick={()=>setTheme("dark")}>
+                    <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  </div>
+                )
+              }
+              {/* <Switch checked={theme === "dark" ? true : false} onCheckedChange={()=>setTheme(theme === "dark" ? "light" : "dark")}/> */}
             </div>
           </nav>
         </header>
