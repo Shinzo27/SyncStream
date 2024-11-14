@@ -4,6 +4,7 @@ import "./globals.css";
 import Appbar from "@/components/Appbar";
 import { ThemeProvider } from "next-themes";
 import Footer from "@/components/Footer";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem disableTransitionOnChange>
             <Appbar/>
             {children}
+            <Toaster position="top-center"/>
             <Footer/>
         </ThemeProvider>
       </body>
