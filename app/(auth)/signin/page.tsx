@@ -38,7 +38,7 @@ const page = () => {
         setIsLoading(false);
         router.push("/");
       } else {
-        toast.error("Login Failed");
+        toast.error("Email or Password is incorrect");
         setIsLoading(false);
       }
     } catch (error) {

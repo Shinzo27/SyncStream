@@ -1,6 +1,8 @@
 import NextAuth from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export const NEXT_AUTH = {
   providers: [
@@ -15,23 +17,30 @@ export const NEXT_AUTH = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials: any) {
-        console.log(credentials);
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
+        const user = await prisma.user.findFirst({
+          where: {
+            email: credentials.email,
+          },
+        })
+        if (!user) {
+          return null;
+        }
+        const passwordMatch = await validatePassword(credentials.password, user?.password);
+        if (!passwordMatch) {
+          return null;
+        }
         return {
-          id: credentials.email,
-          name: credentials.email,
-          email: credentials.email,
-          role: "user",
+          id: user.id,
+          name: user.username,
+          email: user.email,
         };
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET || "",
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
     async jwt({ token, user }: any) {
       if (user) {
@@ -52,4 +61,12 @@ export const NEXT_AUTH = {
     signIn: "/signin",
     signUp: "/signup",
   },
+};
+
+export const validatePassword = async (
+  password: string,
+  hashedPassword: string
+) => {
+  const comparePassword = await bcrypt.compare(password, hashedPassword);
+  return comparePassword;
 };

@@ -7,17 +7,40 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Github } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 const page = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [username, setUsername] = useState<string>("")
+    const [email, setEmail] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
+    const router = useRouter();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setIsLoading(true)
 
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 3000)
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      })
+      const data = await res.json()
+      if(data.status === 200 ) {
+        toast.success('User registered successfully')
+        router.push('/signin')
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
     return (
@@ -28,7 +51,7 @@ const page = () => {
           <CardDescription>Sign up for SyncStream to start listening together</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={onSubmit} method='POST'>
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="username">Username</Label>
@@ -38,6 +61,8 @@ const page = () => {
                   type="text"
                   disabled={isLoading}
                   required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -51,6 +76,8 @@ const page = () => {
                   autoCorrect="off"
                   disabled={isLoading}
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -64,6 +91,8 @@ const page = () => {
                   autoCorrect="off"
                   disabled={isLoading}
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <Button disabled={isLoading} className='bg-slate-800 hover:bg-slate-900 text-white'>

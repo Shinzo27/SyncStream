@@ -18,6 +18,7 @@ model User {
   username        String     @unique
   email           String     @unique
   createdAt       DateTime   @default(now())
+  password        String
   rooms           Room[]     @relation("RoomHost")
   roomParticipations RoomParticipant[]
 }
