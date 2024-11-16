@@ -16,11 +16,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Users } from "lucide-react";
 import Link from "next/link";
 import Loader from "@/components/Loader";
+import { redirect, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [roomCode, setRoomCode] = useState<string>("");
   const [roomName, setRoomName] = useState<string>("");
+  const session = useSession();
+  
+  const router = useRouter();
 
   async function onCreateRoom(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -28,7 +33,7 @@ const page = () => {
     // Simulating room creation
     setTimeout(() => {
       setIsLoading(false);
-      alert("Room created successfully!");
+      router.push(`/room/${roomName}`);
     }, 2000);
   }
 
@@ -38,9 +43,10 @@ const page = () => {
     // Simulating joining a room
     setTimeout(() => {
       setIsLoading(false);
-      alert(`Joined room: ${roomCode}`);
+      router.push(`/room/${roomCode}`);
     }, 2000);
   }
+  session.status !== "authenticated" ? redirect('/signin') : null;
   return isLoading ? <Loader/> : (
     <div className="min-h-screen bg-white dark:bg-neutral-950 flex items-center justify-center p-4">
       <Card className="w-[400px] border shadow-md">

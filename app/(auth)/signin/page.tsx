@@ -15,14 +15,15 @@ import {
 import { Github } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { redirect, useRouter } from "next/navigation";
 
 const page = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const session = useSession();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -46,8 +47,7 @@ const page = () => {
       console.log(error);
     }
   }
-
-  
+  session.status === "authenticated" ? redirect('/') : null;
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-neutral-950 dark:text-white flex items-center justify-center p-4">
