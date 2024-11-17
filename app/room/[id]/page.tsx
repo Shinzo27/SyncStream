@@ -13,91 +13,123 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 const initialUsers = [
-  {
-    id: 1,
-    name: "Alice",
-    avatar: "/placeholder.svg?height=32&width=32",
-    isHost: true,
-  },
-  {
-    id: 2,
-    name: "Bob",
-    avatar: "/placeholder.svg?height=32&width=32",
-    isHost: false,
-  },
-  {
-    id: 3,
-    name: "Charlie",
-    avatar: "/placeholder.svg?height=32&width=32",
-    isHost: false,
-  },
-];
+  { id: 1, name: 'Alice', avatar: '/placeholder.svg?height=32&width=32', isHost: true },
+  { id: 2, name: 'Bob', avatar: '/placeholder.svg?height=32&width=32', isHost: false },
+  { id: 3, name: 'Charlie', avatar: '/placeholder.svg?height=32&width=32', isHost: false },
+]
 
 const initialSongs = [
-  { id: 1, title: "Song 1", artist: "Artist 1", upvotes: 5, downvotes: 1 },
-  { id: 2, title: "Song 2", artist: "Artist 2", upvotes: 3, downvotes: 0 },
-  { id: 3, title: "Song 3", artist: "Artist 3", upvotes: 2, downvotes: 1 },
-];
+  { id: 1, title: 'YouTube Video 1', artist: 'Artist 1', youtubeId: 'dQw4w9WgXcQ', upvotes: 5, downvotes: 1 },
+  { id: 2, title: 'YouTube Video 2', artist: 'Artist 2', youtubeId: 'ZZ5LpwO-An4', upvotes: 3, downvotes: 0 },
+  { id: 3, title: 'YouTube Video 3', artist: 'Artist 3', youtubeId: '9bZkp7q19f0', upvotes: 2, downvotes: 1 },
+]
 
 const page = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSong, setCurrentSong] = useState(initialSongs[0]);
-  const [songs, setSongs] = useState(initialSongs);
-  const [users, setUsers] = useState(initialUsers);
-  const [newSongUrl, setNewSongUrl] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentSong, setCurrentSong] = useState(initialSongs[0])
+  const [songs, setSongs] = useState(initialSongs)
+  const [users, setUsers] = useState(initialUsers)
+  const [newSongUrl, setNewSongUrl] = useState('')
+  const [player, setPlayer] = useState<any>(null)
 
-  const currentUser = users.find((user) => user.isHost) || users[0];
-
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const addSong = (event: React.FormEvent) => {
-    event.preventDefault();
-    // In a real app, you'd parse the URL and extract song info
-    const newSong = {
-      id: songs.length + 1,
-      title: `New Song ${songs.length + 1}`,
-      artist: "Unknown Artist",
-      upvotes: 0,
-      downvotes: 0,
-    };
-    setSongs([...songs, newSong]);
-    setNewSongUrl("");
-  };
-
-  const vote = (songId: number, isUpvote: boolean) => {
-    setSongs(
-      songs.map((song) => {
-        if (song.id === songId) {
-          if (isUpvote) {
-            return { ...song, upvotes: song.upvotes + 1 };
-          } else {
-            return { ...song, downvotes: song.downvotes + 1 };
-          }
-        }
-        return song;
-      })
-    );
-  };
-
-  const removeSong = (songId: number) => {
-    setSongs(songs.filter((song) => song.id !== songId));
-  };
-
-  const removeUser = (userId: number) => {
-    setUsers(users.filter((user) => user.id !== userId));
-  };
-
-  const params = useParams();
-  const roomId = params.id;
+  const currentUser = users.find(user => user.isHost) || users[0]
 
   useEffect(() => {
-    console.log(roomId);
-  }, []);
+    // Load YouTube IFrame API
+    const tag = document.createElement('script')
+    tag.src = 'https://www.youtube.com/iframe_api'
+    const firstScriptTag = document.getElementsByTagName('script')[0]
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+
+    // Initialize YouTube player when API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      const newPlayer = new (window as any).YT.Player('youtube-player', {
+        height: '100%',
+        width: '100%',
+        playerVars: {
+            autoplay: 1,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+        },
+        videoId: currentSong.youtubeId,
+        events: {
+          onReady: (event: any) => {
+            setPlayer(event.target)
+          },
+          onStateChange: (event: any) => {
+            setIsPlaying(event.data === (window as any).YT.PlayerState.PLAYING)
+          },
+        },
+      })
+    }
+  }, [])
+
+  const togglePlayPause = () => {
+    if (player) {
+      if (isPlaying) {
+        player.pauseVideo()
+      } else {
+        player.playVideo()
+      }
+    }
+  }
+
+  const addSong = (event: React.FormEvent) => {
+    event.preventDefault()
+    const youtubeId = extractYoutubeId(newSongUrl)
+    if (youtubeId) {
+      const newSong = {
+        id: songs.length + 1,
+        title: `YouTube Video ${songs.length + 1}`,
+        artist: 'Unknown Artist',
+        youtubeId: youtubeId,
+        upvotes: 0,
+        downvotes: 0
+      }
+      setSongs([...songs, newSong])
+      setNewSongUrl('')
+    } else {
+      alert('Invalid YouTube URL')
+    }
+  }
+
+  const extractYoutubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  const vote = (songId: number, isUpvote: boolean) => {
+    setSongs(songs.map(song => {
+      if (song.id === songId) {
+        if (isUpvote) {
+          return { ...song, upvotes: song.upvotes + 1 }
+        } else {
+          return { ...song, downvotes: song.downvotes + 1 }
+        }
+      }
+      return song
+    }))
+  }
+
+  const removeSong = (songId: number) => {
+    setSongs(songs.filter(song => song.id !== songId))
+  }
+
+  const removeUser = (userId: number) => {
+    setUsers(users.filter(user => user.id !== userId))
+  }
+
+  const changeSong = (song: typeof currentSong) => {
+    setCurrentSong(song)
+    if (player) {
+      player.loadVideoById(song.youtubeId)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-neutral-950 p-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Users List */}
         <Card className="md:col-span-1">
@@ -132,7 +164,7 @@ const page = () => {
         {/* Song Queue */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Song Queue</CardTitle>
+            <CardTitle>Video Queue</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[300px]">
@@ -156,6 +188,9 @@ const page = () => {
                         <X className="h-4 w-4" />
                       </Button>
                     )}
+                    <Button variant="outline" size="icon" onClick={() => changeSong(song)}>
+                      <Play className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -166,52 +201,41 @@ const page = () => {
         {/* Add Song Form */}
         <Card className="md:col-span-3">
           <CardHeader>
-            <CardTitle>Add Song to Queue</CardTitle>
+            <CardTitle>Add YouTube Video to Queue</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={addSong} className="flex space-x-2">
               <Input
                 type="url"
-                placeholder="Paste song URL here"
+                placeholder="Paste YouTube URL here"
                 value={newSongUrl}
                 onChange={(e) => setNewSongUrl(e.target.value)}
                 className="flex-grow"
               />
-              <Button type="submit" className='bg-slate-800 hover:bg-slate-900 text-white'>Add song</Button>
+              <Button type="submit">Add Video</Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Music Player with Disk Animation */}
+        {/* YouTube Player */}
         <Card className="md:col-span-3">
           <CardContent className="py-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className={`w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
-                  <div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-gray-500"></div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">{currentSong.title}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{currentSong.artist}</p>
-                </div>
+          <div className="aspect-video w-full relative">
+            <div id="youtube-player" className="absolute inset-0"></div>
+          </div>
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                <h3 className="text-lg font-semibold">{currentSong.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{currentSong.artist}</p>
               </div>
               <div className="flex items-center space-x-2">
                 <Button variant="outline" size="icon" onClick={togglePlayPause}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" onClick={() => changeSong(songs[(songs.findIndex(s => s.id === currentSong.id) + 1) % songs.length])}>
                   <SkipForward className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-            <div className="flex items-center space-x-2 mt-4">
-              <Volume2 className="h-4 w-4" />
-              <Slider
-                defaultValue={[50]}
-                max={100}
-                step={1}
-                className="w-[100px] bg-gray-700 text-black dark:bg-slate-700 rounded-lg"
-              />
             </div>
           </CardContent>
         </Card>
