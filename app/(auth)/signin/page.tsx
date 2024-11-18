@@ -19,7 +19,6 @@ import { signIn, useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 
 const page = () => {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -38,7 +37,7 @@ const page = () => {
       if(signin?.ok) {
         toast.success("Login Successful");
         setIsLoading(false);
-        router.push("/");
+        redirect('/');
       } else {
         toast.error("Email or Password is incorrect");
         setIsLoading(false);
