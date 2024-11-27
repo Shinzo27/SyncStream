@@ -59,7 +59,7 @@ const page = () => {
           },
           onStateChange: (event: any) => {
             setIsPlaying(event.data === (window as any).YT.PlayerState.PLAYING)
-          },
+          }
         },
       })
     }
