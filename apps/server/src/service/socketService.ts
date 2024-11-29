@@ -21,6 +21,10 @@ class SocketService {
             socket.on("disconnect", () => {
                 console.log("Socket Disconnected!");
             });
+
+            socket.on("joinRoom", ({ roomId, username }) => {
+                console.log("User " + username + " joined room " + roomId);
+            });
         });
     }
 

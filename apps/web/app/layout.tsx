@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
 import { Providers } from "@/lib/Providers";
+import SocketProvider from "@/context/SocketProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
+        <SocketProvider>
         <ThemeProvider attribute={"class"} defaultTheme="system" enableSystem disableTransitionOnChange>
           <Providers>
             <Appbar/>
@@ -41,6 +43,7 @@ export default function RootLayout({
             <Footer/>
           </Providers>
         </ThemeProvider>
+        </SocketProvider>
       </body>
     </html>
   );

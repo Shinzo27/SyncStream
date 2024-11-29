@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { User, Music, ThumbsUp, ThumbsDown, Play, Pause, SkipForward, Volume2, Crown, X } from 'lucide-react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 const initialUsers = [
   { id: 1, name: 'Alice', avatar: '/placeholder.svg?height=32&width=32', isHost: true },
@@ -31,6 +31,7 @@ const page = () => {
   const [users, setUsers] = useState(initialUsers)
   const [newSongUrl, setNewSongUrl] = useState('')
   const [player, setPlayer] = useState<any>(null)
+  const router = useRouter()
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
@@ -58,12 +59,22 @@ const page = () => {
             setPlayer(event.target)
           },
           onStateChange: (event: any) => {
-            setIsPlaying(event.data === (window as any).YT.PlayerState.PLAYING)
-          }
+            if (event.data === (window as any).YT.PlayerState.PLAYING) {
+              setIsPlaying(true)
+            } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
+              setIsPlaying(false)
+            } else if (event.data === (window as any).YT.PlayerState.ENDED) {
+              playNextSong()
+            }
+          },
         },
       })
     }
   }, [])
+
+  const playNextSong = () => {
+    console.log("Next song called!");
+  }
 
   const togglePlayPause = () => {
     if (player) {
@@ -113,6 +124,12 @@ const page = () => {
     }))
   }
 
+  const leaveRoom = () => {
+    // In a real application, you would handle leaving the room here
+    // For now, we'll just navigate back to the rooms page
+    router.push('/rooms')
+  }
+
   const removeSong = (songId: number) => {
     setSongs(songs.filter(song => song.id !== songId))
   }
@@ -137,7 +154,7 @@ const page = () => {
             <CardTitle>Users in Room</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-[300px]">
               {users.map(user => (
                 <div key={user.id} className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
@@ -158,6 +175,13 @@ const page = () => {
                 </div>
               ))}
             </ScrollArea>
+            <Button 
+              variant="default" 
+              className="w-full mt-4 bg-slate-800 dark:bg-red-700 text-white" 
+              onClick={leaveRoom}
+            >
+              Leave Room
+            </Button>
           </CardContent>
         </Card>
 

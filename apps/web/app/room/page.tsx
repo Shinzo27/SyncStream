@@ -18,13 +18,14 @@ import Link from "next/link";
 import Loader from "@/components/Loader";
 import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useSocket } from "@/context/SocketProvider";
 
 const page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [roomCode, setRoomCode] = useState<string>("");
   const [roomName, setRoomName] = useState<string>("");
   const session = useSession();
-  
+  const { joinRoom } = useSocket();
   const router = useRouter();
 
   async function onCreateRoom(event: React.SyntheticEvent) {
@@ -39,14 +40,11 @@ const page = () => {
 
   async function onJoinRoom(event: React.SyntheticEvent) {
     event.preventDefault();
-    setIsLoading(true);
-    // Simulating joining a room
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push(`/room/${roomCode}`);
-    }, 2000);
+    joinRoom({roomId: roomCode, username: session.data?.user?.name || ""})
   }
+
   session.status !== "authenticated" ? redirect('/signin') : null;
+  
   return isLoading ? <Loader/> : (
     <div className="min-h-screen bg-white dark:bg-neutral-950 flex items-center justify-center p-4">
       <Card className="w-[400px] border shadow-md">
