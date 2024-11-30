@@ -21,14 +21,27 @@ export async function POST (req: NextRequest) {
         }
     });
 
+    console.log(userDetails)
+
     if (!userDetails) {
         return NextResponse.json({ message: 'User not found', status: 404 })
+    }
+    
+    const roomParticipant = await prisma.roomParticipant.findFirst({
+        where: {
+            roomName: name,
+            userId: userDetails.id
+        }
+    })
+
+    if (roomParticipant) {
+        return NextResponse.json({ message: 'User Joined Room', status: 200 })
     }
 
     await prisma.roomParticipant.create({
         data: {
             roomName: name,
-            userId: userDetails?.id || '',
+            userId: userDetails.id,
             isHost: false,
             isActive: true,
         }

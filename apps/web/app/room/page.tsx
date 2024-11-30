@@ -29,10 +29,9 @@ const page = () => {
   const router = useRouter();
 
   async function onCreateRoom(event: React.SyntheticEvent) {
-    event.preventDefault();
+    event.preventDefault();   
     setIsLoading(true);
     try {
-      
       const response = await fetch('/api/createRoom', {
         method: 'POST',
         headers: {

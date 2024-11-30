@@ -23,9 +23,23 @@ class SocketService {
                 socket.disconnect()
             });
 
-            socket.on("joinRoom", ({ roomId, username }) => {
-                console.log("User " + username + " joined room " + roomId);
-            });
+            socket.on('joinRoom', async({roomId, username})=> {
+                try {
+                    console.log("room id " + roomId)
+                    console.log("username " + username)
+                    const userKey = `room:${roomId}:users`
+                    await redis.sAdd(userKey, username)
+
+                    socket.join(roomId)
+                    const user = await redis.sMembers(userKey)
+                    io.to(roomId).emit('joinRoom', {username, user})
+
+                    console.log(`${username} joined room ${roomId}`)
+                } catch (error) {
+                    console.log(error); 
+                }
+            })
+            
         });
     }
 
