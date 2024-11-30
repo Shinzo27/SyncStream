@@ -25,7 +25,7 @@ model User {
 
 model Room {
   id              String     @id @default(uuid())
-  name            String
+  name            String     @unique
   createdAt       DateTime   @default(now())
   hostId          String
   host            User       @relation("RoomHost", fields: [hostId], references: [id])
@@ -35,15 +35,15 @@ model Room {
 
 model RoomParticipant {
   id              String     @id @default(uuid())
-  roomId          String
+  roomName          String
   userId          String
   joinedAt        DateTime   @default(now())
   isHost          Boolean    @default(false)
 
-  room            Room       @relation(fields: [roomId], references: [id])
+  room            Room       @relation(fields: [roomName], references: [name])
   user            User       @relation(fields: [userId], references: [id])
 
-  @@unique([roomId, userId]) // Ensures a user can only join a room once
+  @@unique([roomName, userId]) // Ensures a user can only join a room once
 }
 
 model Song {

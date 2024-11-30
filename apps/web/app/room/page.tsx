@@ -19,10 +19,10 @@ import Loader from "@/components/Loader";
 import { redirect, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useSocket } from "@/context/SocketProvider";
+import toast from "react-hot-toast";
 
 const page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [roomCode, setRoomCode] = useState<string>("");
   const [roomName, setRoomName] = useState<string>("");
   const session = useSession();
   const { joinRoom } = useSocket();
@@ -31,16 +31,59 @@ const page = () => {
   async function onCreateRoom(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
-    // Simulating room creation
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push(`/room/${roomName}`);
-    }, 2000);
+    try {
+      
+      const response = await fetch('/api/createRoom', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: roomName,
+          user: session.data?.user?.name || ""
+        })
+      });
+      const data = await response.json();
+      if (data.status === 200) {
+        toast.success(data.message);
+        joinRoom({roomId: data.roomId, username: session.data?.user?.name || ""})
+        setIsLoading(false);
+      } else {
+        toast.error(data.message);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async function onJoinRoom(event: React.SyntheticEvent) {
     event.preventDefault();
-    joinRoom({roomId: roomCode, username: session.data?.user?.name || ""})
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/joinRoom', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: roomName,
+          user: session.data?.user?.name || ""
+        })
+      });
+      const data = await response.json();
+      if (data.status === 200) {
+        console.log(data);
+        toast.success(data.message);
+        joinRoom({roomId: data.roomId, username: session.data?.user?.name || ""})
+        setIsLoading(false);
+      } else {
+        toast.error(data.message);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   session.status !== "authenticated" ? redirect('/signin') : null;
@@ -95,13 +138,13 @@ const page = () => {
                     <Input
                       id="room-code"
                       placeholder="Enter the room code"
-                      value={roomCode}
-                      onChange={(e) => setRoomCode(e.target.value)}
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
                       disabled={isLoading}
                     />
                   </div>
                   <Button
-                    disabled={isLoading || !roomCode}
+                    disabled={isLoading || !roomName}
                     className="bg-slate-900 hover:bg-slate-700 text-white"
                   >
                     {isLoading ? (

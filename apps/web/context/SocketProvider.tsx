@@ -1,5 +1,5 @@
 "use client";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import React, { useCallback, useContext, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -28,12 +28,12 @@ export const useSocket = () => {
 
 const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProviderProps) => {
     const [socket, setSocket] = React.useState<Socket>();
-
+    const router = useRouter();
+    
     const joinRoom = useCallback(({roomId, username}: { roomId: string, username: string }) => {
         if (socket) {
             socket.emit("joinRoom", { roomId: roomId, username: username });
-            localStorage.setItem("username", username)
-            redirect(`/room/${roomId}`)
+            router.push(`/room/${roomId}`);
         }
     }, [socket]);
 

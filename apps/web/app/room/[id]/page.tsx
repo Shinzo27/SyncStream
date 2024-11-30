@@ -127,7 +127,7 @@ const page = () => {
   const leaveRoom = () => {
     // In a real application, you would handle leaving the room here
     // For now, we'll just navigate back to the rooms page
-    router.push('/rooms')
+    router.push('/')
   }
 
   const removeSong = (songId: number) => {
