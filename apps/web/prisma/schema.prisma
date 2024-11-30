@@ -39,6 +39,7 @@ model RoomParticipant {
   userId          String
   joinedAt        DateTime   @default(now())
   isHost          Boolean    @default(false)
+  isActive        Boolean    @default(true)
 
   room            Room       @relation(fields: [roomName], references: [name])
   user            User       @relation(fields: [userId], references: [id])

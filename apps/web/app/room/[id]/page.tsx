@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { User, Music, ThumbsUp, ThumbsDown, Play, Pause, SkipForward, Volume2, Crown, X } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useSocket } from '@/context/SocketProvider'
+import { useSession } from 'next-auth/react'
 
 const initialUsers = [
   { id: 1, name: 'Alice', avatar: '/placeholder.svg?height=32&width=32', isHost: true },
@@ -24,7 +26,9 @@ const initialSongs = [
   { id: 3, title: 'YouTube Video 3', artist: 'Artist 3', youtubeId: '9bZkp7q19f0', upvotes: 2, downvotes: 1 },
 ]
 
-const page = () => {
+const page = ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = React.use(params);
+  const roomId = id.id;
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentSong, setCurrentSong] = useState(initialSongs[0])
   const [songs, setSongs] = useState(initialSongs)
@@ -32,6 +36,8 @@ const page = () => {
   const [newSongUrl, setNewSongUrl] = useState('')
   const [player, setPlayer] = useState<any>(null)
   const router = useRouter()
+  const { socket } = useSocket()
+  const session = useSession()
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
@@ -125,8 +131,7 @@ const page = () => {
   }
 
   const leaveRoom = () => {
-    // In a real application, you would handle leaving the room here
-    // For now, we'll just navigate back to the rooms page
+    
     router.push('/')
   }
 
@@ -144,6 +149,25 @@ const page = () => {
       player.loadVideoById(song.youtubeId)
     }
   }
+
+  useEffect(()=> {
+    if (socket) {
+      socket.on("disconnect", (data) => {
+        console.log("Socket disconnected!");
+        fetch(`/api/leaveRoom`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: roomId as string, 
+            user: session?.data?.user.name as string,
+          }),
+        })
+        router.push('/')
+      })
+    }
+  })
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">

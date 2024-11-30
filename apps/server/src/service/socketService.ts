@@ -18,8 +18,9 @@ class SocketService {
         const io = this._io;
         io.on("connect", (socket) => {
             console.log("Socket Connected!");
-            socket.on("disconnect", () => {
+            socket.on("disconnect", (roomId) => {
                 console.log("Socket Disconnected!");
+                socket.disconnect()
             });
 
             socket.on("joinRoom", ({ roomId, username }) => {

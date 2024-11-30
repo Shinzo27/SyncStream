@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma'
 
 export async function POST (req: NextRequest) {
     const body = await req.json();
@@ -25,14 +25,16 @@ export async function POST (req: NextRequest) {
         return NextResponse.json({ message: 'User not found', status: 404 })
     }
 
-    await prisma.roomParticipant.create({
-        data: {
+    await prisma.roomParticipant.update({
+        where: {
+            id: room.id,
             roomName: name,
             userId: userDetails?.id || '',
-            isHost: false,
-            isActive: true,
+        },
+        data: {
+            isActive: false,
         }
     })
 
-    return NextResponse.json({ message: 'Room found! You are now a participant', roomId: name, status: 200 })
+  return NextResponse.json({ message: 'Room left', status: 200 })
 }
