@@ -24,6 +24,7 @@ import toast from "react-hot-toast";
 const page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [roomName, setRoomName] = useState<string>("");
+  const [roomPassword, setRoomPassword] = useState<string>("");
   const session = useSession();
   const { joinRoom } = useSocket();
   const router = useRouter();
@@ -115,8 +116,18 @@ const page = () => {
                       onChange={(e) => setRoomName(e.target.value)}
                     />
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="room-password">Room Password</Label>
+                    <Input
+                      id="room-password"
+                      placeholder="Enter the room password"
+                      value={roomPassword}
+                      onChange={(e) => setRoomPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
                   <Button
-                    disabled={isLoading || !roomName}
+                    disabled={isLoading || !roomName || !roomPassword}
                     className="bg-slate-900 hover:bg-slate-700 text-white"
                   >
                     {isLoading ? (
@@ -142,8 +153,18 @@ const page = () => {
                       disabled={isLoading}
                     />
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="room-password">Room Password</Label>
+                    <Input
+                      id="room-password"
+                      placeholder="Enter the room password"
+                      value={roomPassword}
+                      onChange={(e) => setRoomPassword(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
                   <Button
-                    disabled={isLoading || !roomName}
+                    disabled={isLoading || !roomName && !roomPassword}
                     className="bg-slate-900 hover:bg-slate-700 text-white"
                   >
                     {isLoading ? (

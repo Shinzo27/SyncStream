@@ -1,16 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Slider } from "@/components/ui/slider"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { User, Music, ThumbsUp, ThumbsDown, Play, Pause, SkipForward, Volume2, Crown, X } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, Play, Pause, SkipForward, Crown, X } from 'lucide-react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useSocket } from '@/context/SocketProvider'
 import { useSession } from 'next-auth/react'
 
@@ -38,17 +36,16 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter()
   const { socket } = useSocket()
   const session = useSession()
+  const playerRef = useRef<any>(null)
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
   useEffect(() => {
-    // Load YouTube IFrame API
     const tag = document.createElement('script')
     tag.src = 'https://www.youtube.com/iframe_api'
     const firstScriptTag = document.getElementsByTagName('script')[0]
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
 
-    // Initialize YouTube player when API is ready
     window.onYouTubeIframeAPIReady = () => {
       const newPlayer = new (window as any).YT.Player('youtube-player', {
         height: '100%',
