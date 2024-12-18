@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ThumbsUp, ThumbsDown, Play, Pause, SkipForward, Crown, X } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import { useSocket } from '@/context/SocketProvider'
 import { useSession } from 'next-auth/react'
 
@@ -24,6 +24,19 @@ const initialSongs = [
   { id: 3, title: 'YouTube Video 3', artist: 'Artist 3', youtubeId: '9bZkp7q19f0', upvotes: 2, downvotes: 1 },
 ]
 
+interface iSong {
+  value: {
+    title: string;
+    youtubeId: string;
+  };
+  score: number;
+}
+
+interface iCurrentSong {
+  title: string;
+  youtubeId: string;
+}
+
 const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const id = React.use(params);
   const roomId = id.id;
@@ -32,81 +45,85 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const [songs, setSongs] = useState(initialSongs)
   const [users, setUsers] = useState(initialUsers)
   const [newSongUrl, setNewSongUrl] = useState('')
-  const [player, setPlayer] = useState<any>(null)
-  const router = useRouter()
-  const { socket } = useSocket()
+  const { socket, addSong, upvote, downvote, leaveRoom } = useSocket()
   const session = useSession()
   const playerRef = useRef<any>(null)
+  const [url, setUrl] = useState<string>("");
+
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
   useEffect(() => {
-    const tag = document.createElement('script')
-    tag.src = 'https://www.youtube.com/iframe_api'
-    const firstScriptTag = document.getElementsByTagName('script')[0]
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+    if(!currentSong) return;
+    console.log("use effect called!");
+    if (!(window as any).YT) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.body.appendChild(script);
+    }
 
     window.onYouTubeIframeAPIReady = () => {
-      const newPlayer = new (window as any).YT.Player('youtube-player', {
-        height: '100%',
-        width: '100%',
+      playerRef.current = new (window as any).YT.Player("youtube-player", {
+        height: "390",
+        width: "640",
+        videoId: currentSong?.youtubeId,
         playerVars: {
-            autoplay: 1,
-            controls: 0,
-            modestbranding: 1,
-            rel: 0,
+          autoplay: 1,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
         },
-        videoId: currentSong.youtubeId,
         events: {
-          onReady: (event: any) => {
-            setPlayer(event.target)
-          },
-          onStateChange: (event: any) => {
-            if (event.data === (window as any).YT.PlayerState.PLAYING) {
-              setIsPlaying(true)
-            } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
-              setIsPlaying(false)
-            } else if (event.data === (window as any).YT.PlayerState.ENDED) {
-              playNextSong()
-            }
-          },
+          onReady: () => console.log("Player is ready"),
         },
-      })
-    }
-  }, [])
+      });
+    };
+  }, [currentSong]);
 
   const playNextSong = () => {
     console.log("Next song called!");
   }
 
   const togglePlayPause = () => {
-    if (player) {
+    if (playerRef) {
       if (isPlaying) {
-        player.pauseVideo()
+        playerRef.current.pauseVideo();
       } else {
-        player.playVideo()
+        playerRef.current.playVideo();
       }
     }
-  }
+  };
 
-  const addSong = (event: React.FormEvent) => {
-    event.preventDefault()
-    const youtubeId = extractYoutubeId(newSongUrl)
-    if (youtubeId) {
-      const newSong = {
-        id: songs.length + 1,
-        title: `YouTube Video ${songs.length + 1}`,
-        artist: 'Unknown Artist',
-        youtubeId: youtubeId,
-        upvotes: 0,
-        downvotes: 0
-      }
-      setSongs([...songs, newSong])
-      setNewSongUrl('')
-    } else {
-      alert('Invalid YouTube URL')
+  const removeSong = () => {
+    // setSongs(songs.filter((song) => song.value.title !== songName));
+  };
+
+  const handleAddSong = (url: string) => {
+    const youtubeId = extractYoutubeId(url);
+    const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+    const requrl = `https://www.googleapis.com/youtube/v3/videos?id=${youtubeId}&part=snippet,contentDetails&key=${API_KEY}`;
+    fetch(requrl)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.items.length > 0) {
+          const title = data.items[0].snippet.title;
+          addSong({
+            roomId: roomId,
+            song: { title: title, youtubeId: youtubeId || "" },
+          });
+        } else {
+          alert("No video found");
+        }
+      });
+    setUrl("");
+  };
+
+  const changeSong = async() => {
+    if(socket){
+      socket.emit("nextsong", roomId)
     }
-  }
+  };
 
   const extractYoutubeId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
@@ -127,44 +144,125 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     }))
   }
 
-  const leaveRoom = () => {
-    
-    router.push('/')
-  }
-
-  const removeSong = (songId: number) => {
-    setSongs(songs.filter(song => song.id !== songId))
-  }
-
   const removeUser = (userId: number) => {
     setUsers(users.filter(user => user.id !== userId))
   }
 
-  const changeSong = (song: typeof currentSong) => {
-    setCurrentSong(song)
-    if (player) {
-      player.loadVideoById(song.youtubeId)
+  useEffect(() => {
+    if(socket){
+      socket.emit("checkRoom", roomId)
     }
-  }
 
-  useEffect(()=> {
-    if (socket) {
-      socket.on("disconnect", (data) => {
-        console.log("Socket disconnected!");
-        fetch(`/api/leaveRoom`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: roomId as string, 
-            user: session?.data?.user.name as string,
-          }),
-        })
-        router.push('/')
-      })
+    if(socket){
+      socket.on("checkRoom", (result) => {
+        console.log(result)
+        if(result.current_song !== null){ 
+          const newCurrentSong = JSON.parse(result.current_song)
+          console.log(newCurrentSong)
+          setCurrentSong(newCurrentSong)
+        }
+        const users = result.user;
+        const playlist = result.playlist;
+        setUsers(users);
+        setSongs(playlist);
+      });
     }
-  })
+
+    if (socket) {
+      socket.on("joinRoom", (message) => {
+        console.log("User Joined");
+        console.log(message);
+        alert(`${message.username} joined the room`);
+        setUsers(message.user);
+      });
+    }
+
+    if (socket) {
+      socket.on("leaveRoom", (message) => {
+        alert(`${message.username} left the room`);
+        setUsers(message.users);
+      });
+    }
+
+    if(socket){
+      socket.on("nextsong", (message) => {
+        if(message.message){
+          return alert(message.message)
+        }
+        const parsedSong = JSON.parse(message);
+        setCurrentSong(parsedSong);
+        if (playerRef.current) {
+          playerRef.current.loadVideoById(parsedSong.youtubeId);
+        } else {
+          console.log("Player not found")
+        }
+      });
+    }
+
+    return () => {
+      socket?.off("checkRoom");
+      socket?.off("joinRoom");
+      socket?.off("leaveRoom");
+      socket?.off("nextsong");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    socket?.on("addSong", (message) => {
+      console.log(message)
+      const parsedSong = message.songs.map((song: any) => ({
+        value: JSON.parse(song.value),
+        score: song.score,
+      }));
+      console.log(parsedSong);
+      setSongs(parsedSong);
+      const parsedCurrentSong = JSON.parse(message.currentSong)
+      console.log(parsedCurrentSong);
+      setCurrentSong(parsedCurrentSong);
+    });
+    socket?.on("upvote", (message) => {
+      console.log(message);
+      const parsedSong = message.result.map((song: any) => ({
+        value: JSON.parse(song.value),
+        score: song.score,
+      }));
+      setSongs(parsedSong);
+    });
+    socket?.on("downvote", (message) => {
+      console.log(message);
+        const parsedSong = message.result.map((song: any) => ({
+        value: JSON.parse(song.value),
+        score: song.score,
+      }));
+      setSongs(parsedSong);
+    });
+
+    return () => {
+      socket?.off("addSong");
+      socket?.off("checkRoom");
+      socket?.off("upvote");
+    };
+  }, [socket]);
+
+  const handleLeaveRoom = () => {
+    leaveRoom(roomId);
+    redirect("/");
+  };
+
+  // const handleUpvote = ({ songTitle }: { songTitle: iSong[] }) => {
+  //   upvote({ roomId: roomId, songtitle: songTitle });
+  // };
+
+  // const handleDownvote = ({ songTitle }: { songTitle: string }) => {
+  //   const checkVote = songs.find((song) => song.value.title === songTitle);
+  //   if (checkVote) {
+  //     if (checkVote.score === 0) {
+  //       alert("You can't downvote a song that has already been downvoted");
+  //       return;
+  //     }
+  //   }
+  //   downvote({ roomId: roomId, songtitle: songTitle });
+  // };
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">
@@ -199,7 +297,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
             <Button 
               variant="default" 
               className="w-full mt-4 bg-slate-800 dark:bg-red-700 text-white" 
-              onClick={leaveRoom}
+              onClick={handleLeaveRoom}
             >
               Leave Room
             </Button>
@@ -229,11 +327,11 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                     </Button>
                     <span>{song.downvotes}</span>
                     {currentUser.isHost && (
-                      <Button variant="ghost" size="icon" onClick={() => removeSong(song.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => removeSong()}>
                         <X className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="outline" size="icon" onClick={() => changeSong(song)}>
+                    <Button variant="outline" size="icon" onClick={() => changeSong()}>
                       <Play className="h-4 w-4" />
                     </Button>
                   </div>
@@ -249,7 +347,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
             <CardTitle>Add YouTube Video to Queue</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={addSong} className="flex space-x-2">
+            <form className="flex space-x-2">
               <Input
                 type="url"
                 placeholder="Paste YouTube URL here"
@@ -277,7 +375,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                 <Button variant="outline" size="icon" onClick={togglePlayPause}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => changeSong(songs[(songs.findIndex(s => s.id === currentSong.id) + 1) % songs.length])}>
+                <Button variant="outline" size="icon" onClick={() => changeSong()}>
                   <SkipForward className="h-4 w-4" />
                 </Button>
               </div>
