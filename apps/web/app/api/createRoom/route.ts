@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST (req: NextRequest) {
     const body = await req.json();
-    const { name, user } = body;
+    const { name, user, password } = body;
 
     const room = await prisma.room.findFirst({
         where: {
@@ -30,7 +30,8 @@ export async function POST (req: NextRequest) {
                     userId: userDetails?.id || '',
                     isHost: true
                 }
-            }
+            },
+            password: password
         }
     })
     

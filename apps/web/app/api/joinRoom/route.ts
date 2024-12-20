@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST (req: NextRequest) {
     const body = await req.json();
-    const { name, user } = body;
+    const { name, user, password } = body;
 
     const room = await prisma.room.findFirst({
         where: {
@@ -15,13 +15,17 @@ export async function POST (req: NextRequest) {
         return NextResponse.json({ message: 'Room not found', status: 404 })
     }
 
+    const roomPassword = room.password;
+
+    if (password !== roomPassword) {
+        return NextResponse.json({ message: 'Incorrect password', status: 401 })
+    }
+
     const userDetails = await prisma.user.findFirst({
         where: {
             username: user 
         }
     });
-
-    console.log(userDetails)
 
     if (!userDetails) {
         return NextResponse.json({ message: 'User not found', status: 404 })
@@ -30,7 +34,7 @@ export async function POST (req: NextRequest) {
     const roomParticipant = await prisma.roomParticipant.findFirst({
         where: {
             roomName: name,
-            userId: userDetails.id
+            userId: userDetails.id,
         }
     })
 
