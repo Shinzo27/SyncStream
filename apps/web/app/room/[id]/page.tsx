@@ -51,7 +51,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const playerRef = useRef<any>(null)
   const [url, setUrl] = useState<string>("");
 
-
   const currentUser = users.find(user => user.isHost) || users[0]
 
   useEffect(() => {
@@ -246,7 +245,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [socket]);
 
   const handleLeaveRoom = () => {
-    leaveRoom(roomId);
+    leaveRoom({ roomId: roomId, username: session?.data?.user.name || "" });
     redirect("/");
   };
 

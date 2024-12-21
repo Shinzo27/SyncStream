@@ -39,7 +39,15 @@ class SocketService {
                     console.log(error); 
                 }
             })
-            
+
+            socket.on('leaveRoom', async({roomId, username}: { roomId: string, username: string })=> {
+                console.log("Leave room " + roomId + " by " + username)
+                const userKey = `room:${roomId}:users`
+                await redis.sRem(userKey, username)
+                const users = await redis.sMembers(userKey)
+                socket.leave(roomId)
+                io.to(roomId).emit("leaveRoom", {roomId, username, users})
+            })
         });
     }
 
