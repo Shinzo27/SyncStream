@@ -30,23 +30,28 @@ const page = () => {
   const router = useRouter();
 
   async function onCreateRoom(event: React.SyntheticEvent) {
-    event.preventDefault();   
+    event.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch('/api/createRoom', {
-        method: 'POST',
+      const response = await fetch("/api/createRoom", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: roomName,
-          user: session.data?.user?.name || ""
-        })
+          user: session.data?.user?.name || "",
+          password: roomPassword,
+        }),
       });
       const data = await response.json();
       if (data.status === 200) {
+        console.log(data.roomId);
         toast.success(data.message);
-        joinRoom({roomId: data.roomId, username: session.data?.user?.name || ""})
+        joinRoom({
+          roomId: data.roomId,
+          username: session.data?.user?.name || "",
+        });
         setIsLoading(false);
       } else {
         toast.error(data.message);
@@ -61,21 +66,25 @@ const page = () => {
     event.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch('/api/joinRoom', {
-        method: 'POST',
+      const response = await fetch("/api/joinRoom", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: roomName,
-          user: session.data?.user?.name || ""
-        })
+          user: session.data?.user?.name || "",
+          password: roomPassword,
+        }),
       });
       const data = await response.json();
       if (data.status === 200) {
         console.log(data);
         toast.success(data.message);
-        joinRoom({roomId: data.roomId, username: session.data?.user?.name || ""})
+        joinRoom({
+          roomId: data.roomId,
+          username: session.data?.user?.name || "",
+        });
         setIsLoading(false);
       } else {
         toast.error(data.message);
@@ -86,9 +95,11 @@ const page = () => {
     }
   }
 
-  session.status !== "authenticated" ? redirect('/signin') : null;
-  
-  return isLoading ? <Loader/> : (
+  session.status !== "authenticated" ? redirect("/signin") : null;
+
+  return isLoading ? (
+    <Loader />
+  ) : (
     <div className="min-h-screen bg-white dark:bg-neutral-950 flex items-center justify-center p-4">
       <Card className="w-[400px] border shadow-md">
         <CardHeader>
@@ -120,6 +131,7 @@ const page = () => {
                     <Label htmlFor="room-password">Room Password</Label>
                     <Input
                       id="room-password"
+                      type="password"
                       placeholder="Enter the room password"
                       value={roomPassword}
                       onChange={(e) => setRoomPassword(e.target.value)}
@@ -157,6 +169,7 @@ const page = () => {
                     <Label htmlFor="room-password">Room Password</Label>
                     <Input
                       id="room-password"
+                      type="password"
                       placeholder="Enter the room password"
                       value={roomPassword}
                       onChange={(e) => setRoomPassword(e.target.value)}
@@ -164,7 +177,7 @@ const page = () => {
                     />
                   </div>
                   <Button
-                    disabled={isLoading || !roomName && !roomPassword}
+                    disabled={isLoading || (!roomName && !roomPassword)}
                     className="bg-slate-900 hover:bg-slate-700 text-white"
                   >
                     {isLoading ? (

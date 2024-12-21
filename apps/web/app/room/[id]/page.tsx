@@ -56,7 +56,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   useEffect(() => {
     if(!currentSong) return;
-    console.log("use effect called!");
+    
     if (!(window as any).YT) {
       const script = document.createElement("script");
       script.src = "https://www.youtube.com/iframe_api";
@@ -66,8 +66,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     window.onYouTubeIframeAPIReady = () => {
       playerRef.current = new (window as any).YT.Player("youtube-player", {
-        height: "390",
-        width: "640",
+        height: '100%',
+        width: '100%',
         videoId: currentSong?.youtubeId,
         playerVars: {
           autoplay: 1,
