@@ -47,10 +47,17 @@ class SocketService {
                 io.to(roomId).emit("leaveRoom", {roomId, username, users})
             })
 
-            socket.on('checkRoom', async(roomId: string) => {             
-                const userKey = `room:${roomId}:users`
-                const users = await redis.sMembers(userKey)
-                io.to(roomId).emit("checkRoom", {users})
+            socket.on('checkRoom', async(roomId: string) => {
+                const data = await fetch(`http://localhost:3000/api/getUsers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ roomId: roomId }),
+                });
+                const json = await data.json();
+                const users = json.users;
+                io.to(roomId).emit("checkRoom", {users, current_song: null})
             })
         });
     }

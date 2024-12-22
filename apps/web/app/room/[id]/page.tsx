@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
@@ -44,14 +43,13 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentSong, setCurrentSong] = useState(initialSongs[0])
   const [songs, setSongs] = useState(initialSongs)
-  const [users, setUsers] = useState(initialUsers)
+  const [users, setUsers] = useState<any[]>([])
   const [newSongUrl, setNewSongUrl] = useState('')
   const { socket, addSong, upvote, downvote, leaveRoom } = useSocket()
   const session = useSession()
   const playerRef = useRef<any>(null)
   const [url, setUrl] = useState<string>("");
-
-  const currentUser = users.find(user => user.isHost) || users[0]
+  const [host, setHost] = useState<string>("");
 
   useEffect(() => {
     if(!currentSong) return;
@@ -155,16 +153,14 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     if(socket){
       socket.on("checkRoom", (result) => {
-        console.log(result)
-        // if(result.current_song !== null){ 
-        //   const newCurrentSong = JSON.parse(result.current_song)
-        //   console.log(newCurrentSong)
-        //   setCurrentSong(newCurrentSong)
-        // }
-        // const users = result.user;
-        // const playlist = result.playlist;
-        // setUsers(users);
-        // setSongs(playlist);
+        if(result.current_song !== null){ 
+          const newCurrentSong = JSON.parse(result.current_song)
+          console.log(newCurrentSong)
+          setCurrentSong(newCurrentSong)
+        }
+        console.log(result.users);
+        const users = result.users;
+        setUsers(users);
       });
     }
 
@@ -276,18 +272,13 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                   <div className="flex items-center space-x-4">
                     <Avatar>
                       <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      <AvatarFallback>{user.user.username}</AvatarFallback>
                     </Avatar>
                     <div className="flex items-center">
-                      <span>{user.name}</span>
+                      <span>{user.user.username}</span>
                       {user.isHost && <Crown className="h-4 w-4 ml-2 text-yellow-500" />}
                     </div>
                   </div>
-                  {currentUser.isHost && !user.isHost && (
-                    <Button variant="ghost" size="icon" onClick={() => removeUser(user.id)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
               ))}
             </ScrollArea>
@@ -323,11 +314,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                       <ThumbsDown className="h-4 w-4" />
                     </Button>
                     <span>{song.downvotes}</span>
-                    {currentUser.isHost && (
-                      <Button variant="ghost" size="icon" onClick={() => removeSong()}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
                     <Button variant="outline" size="icon" onClick={() => changeSong()}>
                       <Play className="h-4 w-4" />
                     </Button>
