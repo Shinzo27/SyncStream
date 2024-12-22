@@ -156,25 +156,25 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     if(socket){
       socket.on("checkRoom", (result) => {
         console.log(result)
-        if(result.current_song !== null){ 
-          const newCurrentSong = JSON.parse(result.current_song)
-          console.log(newCurrentSong)
-          setCurrentSong(newCurrentSong)
-        }
-        const users = result.user;
-        const playlist = result.playlist;
-        setUsers(users);
-        setSongs(playlist);
+        // if(result.current_song !== null){ 
+        //   const newCurrentSong = JSON.parse(result.current_song)
+        //   console.log(newCurrentSong)
+        //   setCurrentSong(newCurrentSong)
+        // }
+        // const users = result.user;
+        // const playlist = result.playlist;
+        // setUsers(users);
+        // setSongs(playlist);
       });
     }
 
     if (socket) {
       socket.on("joinRoom", (message) => {
-        console.log("User Joined");
-        console.log(message);
         alert(`${message.username} joined the room`);
         setUsers(message.user);
       });
+    } else {
+      console.log("Socket not found");
     }
 
     if (socket) {
@@ -209,27 +209,24 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   useEffect(() => {
     socket?.on("addSong", (message) => {
-      console.log(message)
       const parsedSong = message.songs.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
       }));
-      console.log(parsedSong);
       setSongs(parsedSong);
       const parsedCurrentSong = JSON.parse(message.currentSong)
-      console.log(parsedCurrentSong);
       setCurrentSong(parsedCurrentSong);
     });
+
     socket?.on("upvote", (message) => {
-      console.log(message);
       const parsedSong = message.result.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
       }));
       setSongs(parsedSong);
     });
+
     socket?.on("downvote", (message) => {
-      console.log(message);
         const parsedSong = message.result.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,

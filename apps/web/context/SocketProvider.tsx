@@ -32,7 +32,6 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
     
     const joinRoom = useCallback(({roomId, username}: { roomId: string, username: string }) => {
         if (socket) {
-            console.log(roomId);
             socket.emit("joinRoom", { roomId: roomId, username: username });
             router.push(`/room/${roomId}`);
         }

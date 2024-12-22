@@ -16,12 +16,9 @@ class SocketService {
 
     public initListener() {
         const io = this._io;
+
         io.on("connect", (socket) => {
             console.log("Socket Connected!");
-            socket.on("disconnect", (roomId) => {
-                console.log("Socket Disconnected!");
-                socket.disconnect()
-            });
 
             socket.on('joinRoom', async({roomId, username})=> {
                 try {
@@ -32,6 +29,7 @@ class SocketService {
 
                     socket.join(roomId)
                     const user = await redis.sMembers(userKey)
+                    console.log("Event emmited")
                     io.to(roomId).emit('joinRoom', {username, user})
 
                     console.log(`${username} joined room ${roomId}`)
@@ -47,6 +45,12 @@ class SocketService {
                 const users = await redis.sMembers(userKey)
                 socket.leave(roomId)
                 io.to(roomId).emit("leaveRoom", {roomId, username, users})
+            })
+
+            socket.on('checkRoom', async(roomId: string) => {             
+                const userKey = `room:${roomId}:users`
+                const users = await redis.sMembers(userKey)
+                io.to(roomId).emit("checkRoom", {users})
             })
         });
     }

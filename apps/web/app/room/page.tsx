@@ -79,7 +79,6 @@ const page = () => {
       });
       const data = await response.json();
       if (data.status === 200) {
-        console.log(data);
         toast.success(data.message);
         joinRoom({
           roomId: data.roomId,
