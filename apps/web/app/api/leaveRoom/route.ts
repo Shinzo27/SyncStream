@@ -5,21 +5,23 @@ export async function POST (req: NextRequest) {
     const body = await req.json();
     const { name, user } = body;
 
-    const room = await prisma.room.findFirst({
+    const room = await prisma.room.findUnique({
         where: {
             name: name
         }
     });
+    console.log(room)
 
     if (!room) {
         return NextResponse.json({ message: 'Room not found', status: 404 })
     }
 
-    const userDetails = await prisma.user.findFirst({
+    const userDetails = await prisma.user.findUnique({
         where: {
             username: user 
         }
     });
+    console.log(userDetails)
 
     if (!userDetails) {
         return NextResponse.json({ message: 'User not found', status: 404 })
@@ -27,14 +29,15 @@ export async function POST (req: NextRequest) {
 
     await prisma.roomParticipant.update({
         where: {
-            id: room.id,
-            roomName: name,
-            userId: userDetails?.id || '',
+            roomName_userId: {
+                roomName: name,
+                userId: userDetails.id
+            }
         },
         data: {
-            isActive: false,
+            isActive: false
         }
     })
-
-  return NextResponse.json({ message: 'Room left', status: 200 })
+    console.log("Updated")
+    return NextResponse.json({ message: 'Room left', status: 200 })
 }

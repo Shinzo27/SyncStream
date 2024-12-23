@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { redirect, useRouter } from 'next/navigation'
 import { useSocket } from '@/context/SocketProvider'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
 
 const initialUsers = [
   { id: 1, name: 'Alice', avatar: '/placeholder.svg?height=32&width=32', isHost: true },
@@ -239,6 +240,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleLeaveRoom = () => {
     leaveRoom({ roomId: roomId, username: session?.data?.user.name || "" });
+    toast.success("You have left the room");
     redirect("/");
   };
 
@@ -270,15 +272,16 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
               {users.map(user => (
                 <div key={user.id} className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.user.username}</AvatarFallback>
-                    </Avatar>
                     <div className="flex items-center">
                       <span>{user.user.username}</span>
                       {user.isHost && <Crown className="h-4 w-4 ml-2 text-yellow-500" />}
                     </div>
                   </div>
+                    {user.isHost && (
+                    <Button variant="ghost" size="icon" onClick={() => removeUser(user.id)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                    )}
                 </div>
               ))}
             </ScrollArea>

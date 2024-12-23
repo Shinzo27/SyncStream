@@ -43,6 +43,15 @@ class SocketService {
                 const userKey = `room:${roomId}:users`
                 await redis.sRem(userKey, username)
                 const users = await redis.sMembers(userKey)
+                const data = await fetch(`http://localhost:3000/api/leaveRoom`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: roomId, user: username }),
+                });
+                const json = await data.json();
+                console.log(json)
                 socket.leave(roomId)
                 io.to(roomId).emit("leaveRoom", {roomId, username, users})
             })
