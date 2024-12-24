@@ -172,8 +172,9 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     if (socket) {
       socket.on("leaveRoom", (message) => {
-        alert(`${message.username} left the room`);
-        setUsers(message.users);
+        console.log(message)
+        toast.success(`${message.username} left the room`);
+        setUsers(message.user);
       });
     }
 
@@ -255,6 +256,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   //   downvote({ roomId: roomId, songtitle: songTitle });
   // };
 
+  const currentUser = users.find(user => user.isHost) || users[0]
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -273,7 +276,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                       {user.isHost && <Crown className="h-4 w-4 ml-2 text-yellow-500" />}
                     </div>
                   </div>
-                    {user.isHost && (
+                    {currentUser.isHost && !user.isHost && (
                     <Button variant="ghost" size="icon" onClick={() => removeUser(user.id)}>
                       <X className="h-4 w-4" />
                     </Button>

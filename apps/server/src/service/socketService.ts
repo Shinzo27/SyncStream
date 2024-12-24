@@ -60,9 +60,10 @@ class SocketService {
                     body: JSON.stringify({ name: roomId, user: username }),
                 });
                 const json = await data.json();
-                console.log(json)
+                const user = json.roomUsers;
+                console.log(user)
                 socket.leave(roomId)
-                io.to(roomId).emit("leaveRoom", {roomId, username, users})
+                io.to(roomId).emit("leaveRoom", {username, user}) 
             })
 
             socket.on('checkRoom', async(roomId: string) => {

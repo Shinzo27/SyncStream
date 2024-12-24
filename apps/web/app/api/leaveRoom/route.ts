@@ -37,5 +37,15 @@ export async function POST (req: NextRequest) {
         }
     })
 
-    return NextResponse.json({ message: 'Room left', status: 200 })
+    const roomUsers = await prisma.roomParticipant.findMany({
+        where: {
+            roomName: name,
+            isActive: true
+        },
+        include: {
+            user: true
+        }
+    })
+
+    return NextResponse.json({ message: 'Room left', status: 200, roomUsers: roomUsers })
 }
