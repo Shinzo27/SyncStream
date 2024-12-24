@@ -10,7 +10,6 @@ export async function POST (req: NextRequest) {
             name: name
         }
     });
-    console.log(room)
 
     if (!room) {
         return NextResponse.json({ message: 'Room not found', status: 404 })
@@ -21,7 +20,6 @@ export async function POST (req: NextRequest) {
             username: user 
         }
     });
-    console.log(userDetails)
 
     if (!userDetails) {
         return NextResponse.json({ message: 'User not found', status: 404 })
@@ -38,6 +36,6 @@ export async function POST (req: NextRequest) {
             isActive: false
         }
     })
-    console.log("Updated")
+
     return NextResponse.json({ message: 'Room left', status: 200 })
 }

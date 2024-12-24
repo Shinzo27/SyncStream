@@ -156,10 +156,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
       socket.on("checkRoom", (result) => {
         if(result.current_song !== null){ 
           const newCurrentSong = JSON.parse(result.current_song)
-          console.log(newCurrentSong)
           setCurrentSong(newCurrentSong)
         }
-        console.log(result.users);
         const users = result.users;
         setUsers(users);
       });
@@ -167,11 +165,9 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     if (socket) {
       socket.on("joinRoom", (message) => {
-        alert(`${message.username} joined the room`);
+        toast.success(`${message.username} joined the room`);
         setUsers(message.user);
       });
-    } else {
-      console.log("Socket not found");
     }
 
     if (socket) {

@@ -28,8 +28,17 @@ class SocketService {
                     await redis.sAdd(userKey, username)
 
                     socket.join(roomId)
-                    const user = await redis.sMembers(userKey)
-                    console.log("Event emmited")
+                    const data = await fetch(`http://localhost:3000/api/getUsers`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ roomId: roomId }),
+                    });
+                    const json = await data.json();
+                    console.log(json)
+                    const user = json.users;
+                    console.log(user)
                     io.to(roomId).emit('joinRoom', {username, user})
 
                     console.log(`${username} joined room ${roomId}`)

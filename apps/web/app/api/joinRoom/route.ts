@@ -39,7 +39,19 @@ export async function POST (req: NextRequest) {
     })
 
     if (roomParticipant) {
-        return NextResponse.json({ message: 'User Joined Room', roomId: name, status: 200 })
+        await prisma.roomParticipant.update({
+            where: {
+                roomName_userId: {
+                    roomName: name,
+                    userId: userDetails.id,
+                }
+            },
+            data: {
+                isActive: true,
+            }
+        })
+
+        return NextResponse.json({ message: 'Room found! You Joined Room!', roomId: name, status: 200 }) 
     }
 
     await prisma.roomParticipant.create({

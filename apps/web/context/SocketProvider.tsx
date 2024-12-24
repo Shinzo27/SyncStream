@@ -42,7 +42,6 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }: SocketProvi
             socket.emit("leaveRoom", { roomId: roomId, username: username });
             localStorage.removeItem("username")
         }
-        console.log("Leave room " + roomId);
     }, [socket]);
 
     const addSong = useCallback(({song, roomId} : { song: { title: string, youtubeId: string }, roomId: string }) => {
