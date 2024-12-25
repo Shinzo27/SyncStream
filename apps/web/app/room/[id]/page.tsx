@@ -43,7 +43,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const roomId = id.id;
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentSong, setCurrentSong] = useState(initialSongs[0])
-  const [songs, setSongs] = useState(initialSongs)
+  const [songs, setSongs] = useState<any[]>(initialSongs)
   const [users, setUsers] = useState<any[]>([])
   const [newSongUrl, setNewSongUrl] = useState('')
   const { socket, addSong, upvote, downvote, leaveRoom } = useSocket()
@@ -241,20 +241,20 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     redirect("/");
   };
 
-  // const handleUpvote = ({ songTitle }: { songTitle: iSong[] }) => {
-  //   upvote({ roomId: roomId, songtitle: songTitle });
-  // };
+  const handleUpvote = ({ songTitle }: { songTitle: iSong[] }) => {
+    upvote({ roomId: roomId, songtitle: songTitle });
+  };
 
-  // const handleDownvote = ({ songTitle }: { songTitle: string }) => {
-  //   const checkVote = songs.find((song) => song.value.title === songTitle);
-  //   if (checkVote) {
-  //     if (checkVote.score === 0) {
-  //       alert("You can't downvote a song that has already been downvoted");
-  //       return;
-  //     }
-  //   }
-  //   downvote({ roomId: roomId, songtitle: songTitle });
-  // };
+  const handleDownvote = ({ songTitle }: { songTitle: string }) => {
+    const checkVote = songs.find((song) => song.value.title === songTitle);
+    if (checkVote) {
+      if (checkVote.score === 0) {
+        alert("You can't downvote a song that has already been downvoted");
+        return;
+      }
+    }
+    downvote({ roomId: roomId, songtitle: songTitle });
+  };
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
