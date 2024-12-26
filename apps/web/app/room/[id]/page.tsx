@@ -309,14 +309,13 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div className="text-sm text-gray-500 dark:text-gray-400">{song.artist}</div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="icon" onClick={() => vote(song.id, true)}>
+                    <Button variant="outline" size="icon" onClick={() => handleUpvote({songTitle: song.value.title})}>
                       <ThumbsUp className="h-4 w-4" />
                     </Button>
-                    <span>{song.upvotes}</span>
-                    <Button variant="outline" size="icon" onClick={() => vote(song.id, false)}>
+                    <span>{song.score}</span>
+                    <Button variant="outline" size="icon" onClick={() => handleDownvote({songTitle: song.value.title})}>
                       <ThumbsDown className="h-4 w-4" />
                     </Button>
-                    <span>{song.downvotes}</span>
                     <Button variant="outline" size="icon" onClick={() => changeSong()}>
                       <Play className="h-4 w-4" />
                     </Button>

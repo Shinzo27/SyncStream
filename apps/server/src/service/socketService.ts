@@ -97,6 +97,14 @@ class SocketService {
                 io.to(roomId).emit('currentSong', newCurrentSong)
                 io.to(roomId).emit('addSong', {songs, currentSong: newCurrentSong})
             })
+
+            socket.on("upvote", async ({ roomId, songTitle }) => {
+                console.log("Upvote");
+            })
+
+            socket.on("downvote", async ({ roomId, songTitle }) => {
+                console.log("Downvote");
+            })
         });
     }
 
