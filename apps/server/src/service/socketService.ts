@@ -78,6 +78,25 @@ class SocketService {
                 const users = json.users;
                 io.to(roomId).emit("checkRoom", {users, current_song: null})
             })
+
+            socket.on("addSong", async ({ roomId, song }) => {
+                const votekey = `room:${roomId}:votes`
+                const currentSongKey = `room:${roomId}:current_song`;
+
+                const current_song = await redis.get(currentSongKey)
+
+                if(!current_song){
+                    await redis.set(currentSongKey, song)
+                }
+
+                const newCurrentSong = await redis.get(currentSongKey)
+
+                await redis.zAdd(votekey, { score: 0, value: song });
+
+                const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                io.to(roomId).emit('currentSong', newCurrentSong)
+                io.to(roomId).emit('addSong', {songs, currentSong: newCurrentSong})
+            })
         });
     }
 

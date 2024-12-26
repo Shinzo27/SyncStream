@@ -13,12 +13,6 @@ import { useSocket } from '@/context/SocketProvider'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 
-const initialUsers = [
-  { id: 1, name: 'Alice', avatar: '/placeholder.svg?height=32&width=32', isHost: true },
-  { id: 2, name: 'Bob', avatar: '/placeholder.svg?height=32&width=32', isHost: false },
-  { id: 3, name: 'Charlie', avatar: '/placeholder.svg?height=32&width=32', isHost: false },
-]
-
 const initialSongs = [
   { id: 1, title: 'YouTube Video 1', artist: 'Artist 1', youtubeId: 'dQw4w9WgXcQ', upvotes: 5, downvotes: 1 },
   { id: 2, title: 'YouTube Video 2', artist: 'Artist 2', youtubeId: 'ZZ5LpwO-An4', upvotes: 3, downvotes: 0 },
@@ -36,21 +30,20 @@ interface iSong {
 interface iCurrentSong {
   title: string;
   youtubeId: string;
+  artist: string;
 }
 
 const page = ({ params }: { params: Promise<{ id: string }> }) => {
   const id = React.use(params);
   const roomId = id.id;
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentSong, setCurrentSong] = useState(initialSongs[0])
-  const [songs, setSongs] = useState<any[]>(initialSongs)
+  const [currentSong, setCurrentSong] = useState<iCurrentSong>()
+  const [songs, setSongs] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
-  const [newSongUrl, setNewSongUrl] = useState('')
+  const [songUrl, setSongUrl] = useState('')
   const { socket, addSong, upvote, downvote, leaveRoom } = useSocket()
   const session = useSession()
   const playerRef = useRef<any>(null)
-  const [url, setUrl] = useState<string>("");
-  const [host, setHost] = useState<string>("");
 
   useEffect(() => {
     if(!currentSong) return;
@@ -68,7 +61,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
         width: '100%',
         videoId: currentSong?.youtubeId,
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           controls: 0,
           modestbranding: 1,
           rel: 0,
@@ -98,24 +91,25 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     // setSongs(songs.filter((song) => song.value.title !== songName));
   };
 
-  const handleAddSong = (url: string) => {
-    const youtubeId = extractYoutubeId(url);
+  const handleAddSong = () => {
+    const youtubeId = extractYoutubeId(songUrl);
     const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
     const requrl = `https://www.googleapis.com/youtube/v3/videos?id=${youtubeId}&part=snippet,contentDetails&key=${API_KEY}`;
     fetch(requrl)
       .then((response) => response.json())
       .then((data) => {
+        console.log(data.items);
         if (data.items.length > 0) {
           const title = data.items[0].snippet.title;
           addSong({
             roomId: roomId,
             song: { title: title, youtubeId: youtubeId || "" },
-          });
+          })
         } else {
-          alert("No video found");
+          toast.error("Invalid YouTube URL");
         }
       });
-    setUrl("");
+    setSongUrl("");
   };
 
   const changeSong = async() => {
@@ -203,6 +197,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   useEffect(() => {
     socket?.on("addSong", (message) => {
+      console.log(message)
       const parsedSong = message.songs.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
@@ -258,6 +253,12 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
+  useEffect(() => { 
+    if(songs && songs.length > 0){
+      console.log(songs);
+    }
+  }, [songs])
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -301,10 +302,10 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[300px]">
-              {songs.map(song => (
-                <div key={song.id} className="flex items-center justify-between mb-4">
+              {songs.map((song, index) => (
+                <div key={index} className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="font-semibold">{song.title}</div>
+                    <div className="font-semibold">{song.value.title}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">{song.artist}</div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -332,16 +333,16 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
             <CardTitle>Add YouTube Video to Queue</CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="flex space-x-2">
+            <div className="flex space-x-2">
               <Input
                 type="url"
                 placeholder="Paste YouTube URL here"
-                value={newSongUrl}
-                onChange={(e) => setNewSongUrl(e.target.value)}
+                value={songUrl}
+                onChange={(e) => setSongUrl(e.target.value)}
                 className="flex-grow"
               />
-              <Button type="submit">Add Video</Button>
-            </form>
+              <Button type="submit" onClick={handleAddSong}>Add Video</Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -353,8 +354,8 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
             <div className="flex items-center justify-between mt-4">
               <div>
-                <h3 className="text-lg font-semibold">{currentSong.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{currentSong.artist}</p>
+                <h3 className="text-lg font-semibold">{currentSong?.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{currentSong?.artist}</p>
               </div>
               <div className="flex items-center space-x-2">
                 <Button variant="outline" size="icon" onClick={togglePlayPause}>
