@@ -87,10 +87,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  const removeSong = () => {
-    // setSongs(songs.filter((song) => song.value.title !== songName));
-  };
-
   const handleAddSong = () => {
     const youtubeId = extractYoutubeId(songUrl);
     const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
@@ -122,19 +118,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
     const match = url.match(regExp)
     return (match && match[2].length === 11) ? match[2] : null
-  }
-
-  const vote = (songId: number, isUpvote: boolean) => {
-    setSongs(songs.map(song => {
-      if (song.id === songId) {
-        if (isUpvote) {
-          return { ...song, upvotes: song.upvotes + 1 }
-        } else {
-          return { ...song, downvotes: song.downvotes + 1 }
-        }
-      }
-      return song
-    }))
   }
 
   const removeUser = (userId: number) => {
@@ -360,7 +343,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                 <Button variant="outline" size="icon" onClick={togglePlayPause}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => changeSong()}>
+                <Button variant="outline" size="icon" onClick={() => playNextSong()}>
                   <SkipForward className="h-4 w-4" />
                 </Button>
               </div>

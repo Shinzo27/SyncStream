@@ -98,12 +98,57 @@ class SocketService {
                 io.to(roomId).emit('addSong', {songs, currentSong: newCurrentSong})
             })
 
-            socket.on("upvote", async ({ roomId, songTitle }) => {
-                console.log("Upvote");
+            socket.on('upvote', async ({roomId, songTitle})=> {
+                const votekey = `room:${roomId}:votes`
+                const songtitle = JSON.stringify(songTitle)
+                console.log(songtitle)
+
+                await redis.zIncrBy(votekey, 1, songtitle);
+
+                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+
+                if (result.length === 0) {
+                    // throw new Error('No songs found in the room.');
+                    return console.log("No song found!");
+                }
+
+                io.to(roomId).emit('upvote', { result })
             })
 
-            socket.on("downvote", async ({ roomId, songTitle }) => {
-                console.log("Downvote");
+            socket.on('downvote', async ({roomId, songTitle})=> {
+                const votekey = `room:${roomId}:votes`
+                const songtitle = songTitle
+
+                await redis.zIncrBy(votekey, -1, songtitle)
+
+                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+
+                if (result.length === 0) {
+                    // throw new Error('No songs found in the room.');
+                    return console.log("No song found!");
+                }
+
+                io.to(roomId).emit('downvote', { result })
+            })
+
+            socket.on("nextsong", async (roomId) => {
+                const votekey = `room:${roomId}:votes`
+                const currentSongKey = `room:${roomId}:current_song`;
+
+                const nextSong = await redis.zPopMax(votekey)
+                
+                const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                
+                if(songs.length === 0){
+                    io.emit("nextsong", { message: "No song found!" })
+                    return
+                }
+                
+                console.log(songs[0].value)
+
+                await redis.set(currentSongKey, songs[0].value)
+
+                io.to(roomId).emit("nextsong",  songs[0].value)
             })
         });
     }
