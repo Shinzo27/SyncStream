@@ -138,7 +138,7 @@ class SocketService {
                 const votekey = `room:${roomId}:votes`
                 const currentSongKey = `room:${roomId}:current_song`;
 
-                const nextSong = await redis.zPopMax(votekey)
+                await redis.zPopMax(votekey)
                 
                 const songs = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
                 

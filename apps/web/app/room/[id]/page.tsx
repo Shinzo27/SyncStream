@@ -74,7 +74,9 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [currentSong]);
 
   const playNextSong = () => {
-    console.log("Next song called!");
+    if(socket){
+      socket.emit('nextsong', roomId)
+    }
   }
 
   const togglePlayPause = () => {
