@@ -130,9 +130,17 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     if(socket){
       socket.on("checkRoom", (result) => {
+        console.log(result)
         if(result.current_song !== null){ 
           const newCurrentSong = JSON.parse(result.current_song)
           setCurrentSong(newCurrentSong)
+        }
+        if(result.playlist !== null){
+          const newPlaylist = result.playlist.map((song: any) => ({
+            value: JSON.parse(song.value),
+            score: song.score,
+          }));
+          setSongs(newPlaylist);
         }
         const users = result.users;
         setUsers(users);
@@ -224,9 +232,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleDownvote = ({ songTitle }: { songTitle: iSong[] }) => {
     const checkVote = songs.find((song) => song.value === songTitle);
-    console.log(checkVote)
     if (checkVote) {
-      console.log(checkVote.score)
       if (checkVote.score === 0) {
         toast.error("You can't downvote a song that has already been downvoted");
         return;
