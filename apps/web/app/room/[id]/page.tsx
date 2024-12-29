@@ -94,7 +94,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     fetch(requrl)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.items);
         if (data.items.length > 0) {
           const title = data.items[0].snippet.title;
           addSong({
@@ -149,7 +148,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
     if (socket) {
       socket.on("leaveRoom", (message) => {
-        console.log(message)
         toast.success(`${message.username} left the room`);
         setUsers(message.user);
       });
@@ -180,7 +178,6 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
 
   useEffect(() => {
     socket?.on("addSong", (message) => {
-      console.log(message)
       const parsedSong = message.songs.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
@@ -199,6 +196,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     });
 
     socket?.on("downvote", (message) => {
+        console.log(message);
         const parsedSong = message.result.map((song: any) => ({
         value: JSON.parse(song.value),
         score: song.score,
@@ -210,6 +208,7 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
       socket?.off("addSong");
       socket?.off("checkRoom");
       socket?.off("upvote");
+      socket?.off("downvote");
     };
   }, [socket]);
 
@@ -223,24 +222,27 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
     upvote({ roomId: roomId, songtitle: songTitle });
   };
 
-  const handleDownvote = ({ songTitle }: { songTitle: string }) => {
-    const checkVote = songs.find((song) => song.value.title === songTitle);
+  const handleDownvote = ({ songTitle }: { songTitle: iSong[] }) => {
+    const checkVote = songs.find((song) => song.value === songTitle);
+    console.log(checkVote)
     if (checkVote) {
+      console.log(checkVote.score)
       if (checkVote.score === 0) {
-        alert("You can't downvote a song that has already been downvoted");
+        toast.error("You can't downvote a song that has already been downvoted");
         return;
+      } else {
+        downvote({ roomId: roomId, songtitle: songTitle });
       }
     }
-    downvote({ roomId: roomId, songtitle: songTitle });
   };
 
   const currentUser = users.find(user => user.isHost) || users[0]
 
-  useEffect(() => { 
-    if(songs && songs.length > 0){
-      console.log(songs);
-    }
-  }, [songs])
+  // useEffect(() => { 
+  //   if(songs && songs.length > 0){
+  //     console.log(songs);
+  //   }
+  // }, [songs])
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 p-4">
@@ -292,11 +294,11 @@ const page = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div className="text-sm text-gray-500 dark:text-gray-400">{song.artist}</div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="icon" onClick={() => handleUpvote({songTitle: song.value.title})}>
+                    <Button variant="outline" size="icon" onClick={() => handleUpvote({ songTitle: song.value })}>
                       <ThumbsUp className="h-4 w-4" />
                     </Button>
                     <span>{song.score}</span>
-                    <Button variant="outline" size="icon" onClick={() => handleDownvote({songTitle: song.value.title})}>
+                    <Button variant="outline" size="icon" onClick={() => handleDownvote({songTitle: song.value })}>
                       <ThumbsDown className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => changeSong()}>

@@ -22,8 +22,6 @@ class SocketService {
 
             socket.on('joinRoom', async({roomId, username})=> {
                 try {
-                    console.log("room id " + roomId)
-                    console.log("username " + username)
                     const userKey = `room:${roomId}:users`
                     await redis.sAdd(userKey, username)
 
@@ -36,9 +34,7 @@ class SocketService {
                         body: JSON.stringify({ roomId: roomId }),
                     });
                     const json = await data.json();
-                    console.log(json)
                     const user = json.users;
-                    console.log(user)
                     io.to(roomId).emit('joinRoom', {username, user})
 
                     console.log(`${username} joined room ${roomId}`)
@@ -61,7 +57,6 @@ class SocketService {
                 });
                 const json = await data.json();
                 const user = json.roomUsers;
-                console.log(user)
                 socket.leave(roomId)
                 io.to(roomId).emit("leaveRoom", {username, user}) 
             })
@@ -101,14 +96,12 @@ class SocketService {
             socket.on('upvote', async ({roomId, songTitle})=> {
                 const votekey = `room:${roomId}:votes`
                 const songtitle = JSON.stringify(songTitle)
-                console.log(songtitle)
 
                 await redis.zIncrBy(votekey, 1, songtitle);
 
                 const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
 
                 if (result.length === 0) {
-                    // throw new Error('No songs found in the room.');
                     return console.log("No song found!");
                 }
 
@@ -116,19 +109,29 @@ class SocketService {
             })
 
             socket.on('downvote', async ({roomId, songTitle})=> {
-                const votekey = `room:${roomId}:votes`
-                const songtitle = songTitle
+                try {
+                    const votekey = `room:${roomId}:votes`
 
-                await redis.zIncrBy(votekey, -1, songtitle)
+                    const songExists = await redis.zScore(votekey, songTitle);
 
-                const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+                    if (songExists === null) {
+                        console.error(`Song "${songTitle}" not found in room ${roomId}.`);
+                        return;
+                    }
 
-                if (result.length === 0) {
-                    // throw new Error('No songs found in the room.');
-                    return console.log("No song found!");
+                    const newVote = await redis.zIncrBy(votekey, -1, songTitle);
+                    console.log(newVote);
+
+                    const result = await redis.zRangeWithScores(votekey, 0, -1, { REV: true });
+
+                    if (result.length === 0) {
+                        return console.log("No song found!");
+                    }
+
+                    io.to(roomId).emit('downvote', { result })
+                } catch (error) {
+                    console.log(error)
                 }
-
-                io.to(roomId).emit('downvote', { result })
             })
 
             socket.on("nextsong", async (roomId) => {
@@ -143,8 +146,6 @@ class SocketService {
                     io.emit("nextsong", { message: "No song found!" })
                     return
                 }
-                
-                console.log(songs[0].value)
 
                 await redis.set(currentSongKey, songs[0].value)
 

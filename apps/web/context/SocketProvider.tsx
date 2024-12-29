@@ -13,7 +13,7 @@ interface iSocketContext {
     leaveRoom: ({ roomId, username }: { roomId: string, username: string }) => any;
     addSong: ({roomId, song}: { roomId: string, song:{ title: string, youtubeId: string } }) => any;
     upvote: ({roomId, songtitle}: { roomId: string, songtitle: any }) => any;
-    downvote: ({roomId, songtitle}: { roomId: string, songtitle: string }) => any;
+    downvote: ({roomId, songtitle}: { roomId: string, songtitle: any }) => any;
 }
 
 const SocketContext = React.createContext<iSocketContext | null>(null);
